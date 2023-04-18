@@ -22,14 +22,13 @@ def search_contact(driver,name,time: int):
     print(f'waiting for login for {time} seconds')
 
     try:
-        WebDriverWait(driver, time).until(
+        searchBox = WebDriverWait(driver, time).until(
             EC.presence_of_element_located((By.XPATH, '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]'))
         )
     except:
         print('Timeout while waiting for search box')
         quit()
-    print(f'login successful, searching for {name}...')
-    searchBox = driver.find_element('xpath', '//*[@id="side"]/div[1]/div/div/div[2]/div/div[1]')
+    print(f'login successful, searching for \033[3m{name}\033[0m ...')
     searchBox.send_keys(name)
 
 def parse_arguments():
@@ -47,7 +46,7 @@ def main(args):
     if args.head:
         options.arguments.remove("--headless")  
 
-    options.add_argument('--user-data-dir=./User_Data')
+    options.add_argument('--user-data-dir=/home/cederic/programming/python/whatsappweb_scraper/User_Data')
     driver = webdriver.Chrome(options=options)  # 2nd change
     driver.get('https://web.whatsapp.com/')
 
@@ -56,9 +55,28 @@ def main(args):
 
     search_contact(driver,name,time)
 
-    sleep(1)
-    user = driver.find_element('xpath', '//span[@title = "{}"]'.format(name))
-    user.click()
+    # sleep(1)
+    try:
+        chats = WebDriverWait(driver, time).until(
+            EC.presence_of_all_elements_located((By.XPATH, f'//span[contains(@title, "{name}")]'))
+        )
+    except Exception as e:
+        print(e)
+        print(f'Chat with \033[3m{name}\033[0m not found')
+        quit()
+    
+    if len(chats) > 1:
+        print(f'Found {len(chats)} chats that contain \033[3m{name}\033[0m')
+        for i,chat in enumerate(chats,1):
+            print(f'{i}: {chat.get_attribute("title")}')
+        selection = int(input('Select the correct chat by entering the number: '))
+        chat = chats[selection-1]
+    else:
+        chat = chats[0]
+
+    name = chat.get_attribute('title') 
+    input(f'Press Enter to send message(s) to {name}:')
+    chat.click()
 
     # The classname of message box may vary.
     msg_box = driver.find_element('xpath', '//*[@id="main"]/footer/div[1]/div/span[2]/div/div[2]/div[1]/div/div[1]')
@@ -69,6 +87,7 @@ def main(args):
         button.click()
     sleep(2)
     print('Bombing Complete!!')
+    driver.quit()
 
 args = parse_arguments()
 banner()
