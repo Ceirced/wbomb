@@ -7,6 +7,8 @@ import argparse
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 
 def banner():
@@ -47,7 +49,7 @@ def main(args):
         options.arguments.remove("--headless")  
 
     options.add_argument('--user-data-dir=/home/cederic/programming/python/whatsappweb_scraper/User_Data')
-    driver = webdriver.Chrome(options=options)  # 2nd change
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)  # 2nd change
     driver.get('https://web.whatsapp.com/')
 
     name, msg, count, time= args.name, args.message, int(args.count), int(args.time)
